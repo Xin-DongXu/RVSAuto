@@ -4,7 +4,7 @@ End users only need the root [README](../README.md). This file is for people who
 
 ## Repository layout (release hygiene)
 
-Do **not** commit: `p2rank_*`, `Uni-Dock-main/`, `AF2BIND_out/`, `workdir/`, `results/`, `*.pdbqt`, personal HPC workdirs. See [RELEASE_CHECKLIST_zh.md](RELEASE_CHECKLIST_zh.md).
+Do **not** commit: `p2rank_*`, `Uni-Dock-main/`, `AF2BIND_out/`, `workdir/`, `results/`, `logs/`, `*.pdbqt`, or personal HPC workdirs (`xdxu_workdir/`, etc.). Run `git status` before every push.
 
 ## Development install
 
