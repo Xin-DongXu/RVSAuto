@@ -2,7 +2,14 @@
 
 All notable changes to this project are documented here.
 
-## [11.0.0] - 2026-09-29
+## [1.1.0] - 2026-09-29
+
+### Added
+
+- **`rvsauto screen` progress bar** — terminal display of overall completion (%), elapsed time, and ETA across receptor PDBQT conversion, pocket preparation (P2Rank / AF2BIND), and UniDock docking jobs. Disable with `--no_progress`.
+- Dependency: `tqdm`.
+
+## [1.0.0] - 2026-09-29
 
 First public release.
 
