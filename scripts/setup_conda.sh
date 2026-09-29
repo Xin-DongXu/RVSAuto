@@ -20,11 +20,10 @@ create_or_update() {
 create_or_update conda/environment-adt.yml
 create_or_update conda/environment-unidock.yml
 create_or_update conda/environment-pdbfixer.yml
-create_or_update conda/environment-dev.yml
 
 echo
 echo "[setup] Done. Recommended usage:"
-echo "  conda activate rvsauto-dev     # Python CLI + tests"
+echo "  pip install .                    # RVSAuto CLI (from repo root)"
 echo "  conda activate adt_env           # prepare_receptor4 / prepare_ligand4 / obabel"
 echo "  conda activate unidock_env       # GPU docking"
 echo "  conda activate pdbfixer_env      # optional AlphaFold repair"

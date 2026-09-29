@@ -5,24 +5,9 @@ Batch UniDock pipelines for:
 1. **Virtual screening** -- pocket prediction (P2Rank or precomputed AF2BIND) to docking box to GPU docking
 2. **Self-redocking + RMSD** -- split a complex, re-dock the native ligand, report heavy-atom RMSD
 
-UniDock is Linux-only (NVIDIA GPU, compute capability >= 7.0). Place P2Rank next to this repository (or on `PATH`). Install UniDock and PDBQT helpers with conda as shown below. Third-party binaries are **not** vendored in git.
+UniDock is Linux-only (NVIDIA GPU, compute capability >= 7.0). Install RVSAuto with pip and set up UniDock, MGLTools/ADT, and (for screening) P2Rank as below. P2Rank and UniDock are **not** bundled in this repository.
 
-```
-RVSAuto/
-  pyproject.toml          # pip / PyPI packaging (console_scripts below)
-  conda/                  # conda environment specs
-  rvsauto/                # Python package + CLI modules
-  tests/
-  scripts/
-  p2rank_2.5.1/           # you provide (cwd or --p2rank_path; not in git)
-```
-
-Installed commands (see **Installation**):
-
-- `rvsauto screen` — virtual screening (P2Rank or AF2BIND pockets)
-- `rvsauto redock` — self-redocking + heavy-atom RMSD
-
-Legacy names `rvsauto-unidock` / `rvsauto-redock` remain as aliases.
+**Commands:** `rvsauto screen` (virtual screening) and `rvsauto redock` (self-redocking + RMSD). Aliases: `rvsauto-unidock`, `rvsauto-redock`.
 
 ---
 
@@ -30,17 +15,15 @@ Legacy names `rvsauto-unidock` / `rvsauto-redock` remain as aliases.
 
 ### 1. pip (Python package)
 
-From a git clone or PyPI:
+From a git clone:
 
 ```bash
 git clone https://github.com/Xin-DongXu/RVSAuto.git
 cd RVSAuto
 pip install .
-# development / editable:
-pip install -e ".[dev]"
 ```
 
-After install, the following commands are on your `PATH`:
+After install, these commands are on your `PATH`:
 
 ```bash
 rvsauto --help
@@ -49,7 +32,7 @@ rvsauto redock --help
 python -m rvsauto screen --help   # same as above
 ```
 
-Core dependencies: `numpy`, `pandas`, `biopython` (declared in `pyproject.toml`).
+Core Python dependencies (`numpy`, `pandas`, `biopython`) are installed automatically.
 
 ### 2. Conda environments (external tools)
 
@@ -65,12 +48,9 @@ Or one at a time:
 conda env create -f conda/environment-adt.yml       # MGLTools / obabel
 conda env create -f conda/environment-unidock.yml   # UniDock GPU
 conda env create -f conda/environment-pdbfixer.yml  # optional PDB repair
-conda env create -f conda/environment-dev.yml     # editable RVSAuto + pytest (installs CLI)
 ```
 
-`rvsauto-dev` runs `pip install -e ".[dev]"`, which installs the `rvsauto` command (`screen` / `redock` subcommands) and the `rvsauto-unidock` / `rvsauto-redock` aliases.
-
-Pass env names or absolute prefixes to the pipeline, e.g. `--adt_env_path adt_env`, `--dock_env_path unidock_env`.
+Pass conda env **names** or absolute prefixes to the pipeline, e.g. `--adt_env_path adt_env`, `--dock_env_path unidock_env`.
 
 ### 3. UniDock (conda)
 
@@ -128,11 +108,11 @@ java -version          # must be 17+
 /path/to/p2rank_2.5.1/prank -v
 ```
 
-P2Rank writes pocket CSVs to `workdir/receptors_Pocket/predict_receptors/` when given a `receptors.ds` dataset. Some runs (legacy `.txt` lists or certain P2Rank builds) place `*_predictions.csv` directly under `receptors_Pocket/`; RVSAuto auto-detects both layouts via `resolve_p2rank_predictions_dir`.
+P2Rank writes pocket CSVs to `workdir/receptors_Pocket/predict_receptors/` when given a `receptors.ds` dataset. Some runs (legacy `.txt` lists or certain P2Rank builds) place `*_predictions.csv` directly under `receptors_Pocket/`; RVSAuto detects both layouts automatically.
 
 For AlphaFold structures always pass `--use_alphafold` (uses `config/alphafold.groovy` and `models/alphafold/model.zst`).
 
-### 5. Optional
+### 6. Optional
 
 ```bash
 # optional symmetry-aware RMSD: rvsauto redock --symmetry_aware_rmsd
@@ -261,26 +241,9 @@ Accepts `.pdb`, `.cif`, and gzipped variants. Summary: `results/redock_summary.t
 
 ---
 
-## Tests
+## Documentation
 
-```bash
-pip install -e ".[dev]"
-pytest -v
-```
-
-No GPU is required. Tests that read `AF2BIND_out/` are skipped if that folder is absent.
-
----
-
-## Publish (GitHub / PyPI)
-
-```bash
-pip install build twine
-python -m build
-twine upload dist/*
-```
-
-Tag releases on GitHub, e.g. `git tag v11.0.0 && git push origin v11.0.0`.
+User guide: this file. For tests, releases, and development setup, see [docs/](docs/).
 
 ---
 

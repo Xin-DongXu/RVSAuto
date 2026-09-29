@@ -64,10 +64,8 @@ python -m build   # 检查 sdist 能否打包
 
 ## 6. 首次推送 GitHub 建议流程
 
-推荐以 **`RVSAuto-publish`** 为上传目录（已排除 `p2rank_*`、`Uni-Dock-main`、工作目录）。
-
 ```bash
-cd RVSAuto-publish   # 或你的干净克隆路径
+cd RVSAuto   # 仓库根目录；确保未跟踪 p2rank_*、Uni-Dock-main、工作目录
 git init   # 若尚未初始化
 git add rvsauto tests scripts conda .github README.md LICENSE CHANGELOG.md pyproject.toml MANIFEST.in requirements.txt docs .gitignore
 git status   # 确认无 Uni-Dock-main / p2rank / AF2BIND_out
