@@ -28,8 +28,8 @@ af2bind-main/
 # local research dumps (keep out of public clones unless you choose otherwise)
 AF2BIND_out/
 
-# local maintainer notes (keep on your machine only)
-docs/RELEASE_CHECKLIST_zh.md
+# local maintainer notes (not for GitHub)
+docs/
 
 # local batch / HPC working copies (never publish)
 xdxu_workdir/

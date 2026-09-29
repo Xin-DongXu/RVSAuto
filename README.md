@@ -241,12 +241,6 @@ Accepts `.pdb`, `.cif`, and gzipped variants. Summary: `results/redock_summary.t
 
 ---
 
-## Documentation
-
-User guide: this file. For tests, releases, and development setup, see [docs/](docs/).
-
----
-
 ## Cite
 
 If you publish results from these pipelines, cite the tools you actually used:
