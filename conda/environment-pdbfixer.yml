@@ -1,0 +1,7 @@
+name: pdbfixer_env
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - "openmm>=8.0"
+  - "pdbfixer>=1.9"

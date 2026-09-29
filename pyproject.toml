@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rvsauto"
+dynamic = ["version"]
+description = "Batch UniDock virtual screening and self-redocking pipelines"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [
+    { name = "RVSAuto Contributors" },
+]
+keywords = [
+    "unidock",
+    "docking",
+    "virtual-screening",
+    "p2rank",
+    "af2bind",
+    "redock",
+    "rmsd",
+    "structural-biology",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+dependencies = [
+    "numpy>=1.20",
+    "pandas>=1.3",
+    "biopython>=1.80",
+]
+
+[project.optional-dependencies]
+rdkit = ["rdkit-pypi>=2022.9.5; platform_system=='Linux'"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "build>=1.0",
+    "twine>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Xin-DongXu/RVSAuto"
+Repository = "https://github.com/Xin-DongXu/RVSAuto"
+Issues = "https://github.com/Xin-DongXu/RVSAuto/issues"
+
+[project.scripts]
+rvsauto = "rvsauto.__main__:main"
+rvsauto-unidock = "rvsauto.cli_unidock:main"
+rvsauto-redock = "rvsauto.cli_redock:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "rvsauto.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rvsauto*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

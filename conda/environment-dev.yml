@@ -1,0 +1,10 @@
+name: rvsauto-dev
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pip
+  - pytest>=7.0
+  - pytest-cov>=4.0
+  - pip:
+      - -e ".[dev]"

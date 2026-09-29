@@ -1,0 +1,9 @@
+include README.md LICENSE pyproject.toml requirements.txt
+graft tests
+graft scripts
+graft conda
+recursive-exclude p2rank_* *
+recursive-exclude Uni-Dock-main *
+recursive-exclude AF2BIND_out *
+recursive-exclude __pycache__ *
+recursive-exclude *.py[cod]

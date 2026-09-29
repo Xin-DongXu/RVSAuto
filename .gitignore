@@ -1,0 +1,39 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+.idea/
+.vscode/
+.cursor/
+.pytest_cache/
+
+# pipeline outputs
+logs/
+workdir/
+results/
+*.pdbqt
+*_cleaned.pdb
+
+# bundled third-party packages (install separately; do not publish)
+p2rank_*/
+Uni-Dock-main/
+af2bind-main/
+
+# local research dumps (keep out of public clones unless you choose otherwise)
+AF2BIND_out/
+
+# local batch / HPC working copies (never publish)
+xdxu_workdir/
+**/BNR1_Tree/
+**/At_ETH_*/
+
+# accidental large artifacts
+*.tar.gz
+*.zip
+test_output/

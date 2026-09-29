@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -v --tb=short
+
+      - name: Verify CLI entry points
+        run: |
+          rvsauto --help
+          rvsauto screen --help
+          rvsauto redock --help
+          rvsauto-unidock --help
+          rvsauto-redock --help
