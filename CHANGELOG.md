@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.4] - 2026-09-30
+
+### Added
+
+- **`rvsauto screen` progress** for post-pocket stages: PDBQT pocket filtering and writing docking `.conf` files (`Pocket configs`), so long proteome runs no longer appear frozen after AF2BIND/P2Rank reaches 100%.
+
 ## [1.1.3] - 2026-09-30
 
 ### Fixed

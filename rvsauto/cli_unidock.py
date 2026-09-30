@@ -832,7 +832,10 @@ def main(argv=None) -> int:
         )
 
     if not args.dry_run:
+        progress.add_tasks(1)
+        progress.step(0, phase="Filter pockets")
         pockets = _filter_pockets_with_pdbqt(pockets, pdbqt_dir)
+        progress.step(1, phase="Filter pockets")
 
     if not pockets:
         logging.error("No pockets were generated; aborting.")
@@ -851,6 +854,8 @@ def main(argv=None) -> int:
     if max_volume is not None:
         logging.info("Docking box volume cap: %.0f A^3", max_volume)
 
+    progress.add_tasks(len(pockets))
+    progress.step(0, phase="Pocket configs")
     summary_rows = write_pocket_configs(
         pockets,
         pdb_dir,
@@ -862,6 +867,7 @@ def main(argv=None) -> int:
         max_box_volume=max_volume,
         skip_existing=not args.rewrite_pocket_configs,
         require_pdbqt=not args.dry_run,
+        progress=progress,
     )
     summary_tsv = os.path.join(results_dir, "pockets_summary.tsv")
     write_pocket_summary(summary_rows, summary_tsv)

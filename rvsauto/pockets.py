@@ -685,14 +685,21 @@ def write_pocket_configs(
     max_box_volume: Optional[float] = UNIDOCK_MAX_GRID_VOLUME,
     skip_existing: bool = True,
     require_pdbqt: bool = False,
+    progress=None,
 ) -> List[dict]:
-    """Write UniDock/Vina .conf files and return a summary table as dicts."""
+    """Write UniDock/Vina .conf files and return a summary table as dicts.
+
+    *progress*, if given, should expose ``step(n=1, phase=...)`` (e.g.
+    ``PipelineProgress``) and is advanced once per pocket.
+    """
     os.makedirs(pocket_output_dir, exist_ok=True)
     rows = []
     for pocket in pockets:
         pdb_file = os.path.join(pdb_dir, f"{pocket.protein_id}.pdb")
         if not os.path.exists(pdb_file):
             logging.warning("PDB file %s not found; skip pocket.", pdb_file)
+            if progress is not None:
+                progress.step(1, phase="Pocket configs")
             continue
         pdbqt_file = os.path.join(pdbqt_dir, f"{pocket.protein_id}.pdbqt")
         if require_pdbqt and (
@@ -702,6 +709,8 @@ def write_pocket_configs(
                 "Receptor PDBQT missing for %s; skip pocket %d.",
                 pocket.protein_id, pocket.pocket_index,
             )
+            if progress is not None:
+                progress.step(1, phase="Pocket configs")
             continue
         config_filename = (
             f"config_{pocket.protein_id}_pocket_{pocket.pocket_index}.conf"
@@ -757,6 +766,8 @@ def write_pocket_configs(
                 **{k: v for k, v in pocket.extra.items() if k not in {"center_x", "center_y", "center_z"}},
             }
         )
+        if progress is not None:
+            progress.step(1, phase="Pocket configs")
     return rows
 
 
