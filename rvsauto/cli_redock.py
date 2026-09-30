@@ -504,7 +504,7 @@ def main(argv=None) -> int:
     )
     logging.info("UniDock binary: %s", unidock_bin)
 
-    progress.begin(len(inputs))
+    progress.begin_phase("Preprocess", len(inputs))
     logging.info("Phase 1: preprocessing complexes (split + PDBQT + conf)")
     prepared = []
     failed_rows = []
@@ -531,7 +531,7 @@ def main(argv=None) -> int:
                         rmsd_heavy=float("nan"),
                     )
                 )
-            progress.step(1, phase="Preprocess")
+            progress.step(1)
             if i % 50 == 0 or i == len(inputs):
                 logging.info("  preprocessed %d/%d", i, len(inputs))
 
@@ -557,8 +557,7 @@ def main(argv=None) -> int:
     logging.info("Phase 2: redocking with UniDock")
     rows = list(failed_rows)
     gpu_cycle = 0
-    progress.add_tasks(len(already_done) + len(to_dock))
-    progress.step(0, phase="UniDock redock")
+    progress.begin_phase("UniDock redock", len(already_done) + len(to_dock))
 
     def _submit(pool, task, gpu_id):
         return pool.submit(
@@ -595,7 +594,7 @@ def main(argv=None) -> int:
                         status=f"failed (dock): {exc}",
                     )
                 )
-            progress.step(1, phase="UniDock redock")
+            progress.step(1)
             if total and (i % 25 == 0 or i == total):
                 logging.info("  scored %d/%d", i, total)
                 write_summary(rows, summary_tsv)

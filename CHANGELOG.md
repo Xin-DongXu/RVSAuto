@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.5] - 2026-09-30
+
+### Changed
+
+- **Per-phase progress bars** for `rvsauto screen` and `rvsauto redock` — each stage (Receptor PDBQT, AF2BIND/P2Rank, Filter pockets, Pocket configs, UniDock, …) now has its **own** 0–100% bar instead of one combined counter that made mid-pipeline percentages misleading.
+
 ## [1.1.4] - 2026-09-30
 
 ### Added

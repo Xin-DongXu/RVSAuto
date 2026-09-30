@@ -699,7 +699,7 @@ def write_pocket_configs(
         if not os.path.exists(pdb_file):
             logging.warning("PDB file %s not found; skip pocket.", pdb_file)
             if progress is not None:
-                progress.step(1, phase="Pocket configs")
+                progress.step(1)
             continue
         pdbqt_file = os.path.join(pdbqt_dir, f"{pocket.protein_id}.pdbqt")
         if require_pdbqt and (
@@ -710,7 +710,7 @@ def write_pocket_configs(
                 pocket.protein_id, pocket.pocket_index,
             )
             if progress is not None:
-                progress.step(1, phase="Pocket configs")
+                progress.step(1)
             continue
         config_filename = (
             f"config_{pocket.protein_id}_pocket_{pocket.pocket_index}.conf"
@@ -767,7 +767,7 @@ def write_pocket_configs(
             }
         )
         if progress is not None:
-            progress.step(1, phase="Pocket configs")
+            progress.step(1)
     return rows
 
 

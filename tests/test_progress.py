@@ -8,9 +8,18 @@ from rvsauto.progress import PipelineProgress, silence_console_logging
 
 def test_disabled_progress_is_noop():
     p = PipelineProgress(enabled=False)
-    p.begin(10)
-    p.step(5, phase="test")
+    p.begin_phase("test", 10)
+    p.step(5)
     p.add_tasks(3)
+    p.close()
+
+
+def test_begin_phase_replaces_bar():
+    p = PipelineProgress(enabled=False)
+    p.begin_phase("A", 10)
+    p.step(10)
+    p.begin_phase("B", 5)
+    p.step(5)
     p.close()
 
 

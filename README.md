@@ -141,7 +141,7 @@ rvsauto screen \
 
 `--use_alphafold` passes P2Rank `-c alphafold`, recommended for AlphaFold models.
 
-During long batch runs, `rvsauto screen` and `rvsauto redock` show a **terminal progress bar** (overall % complete, elapsed time, and ETA) across receptor prep, pocket building, **writing pocket configs**, and docking. Use `--no_progress` to turn it off. Use `--quiet` to hide console log lines **and** external-tool chatter (ADT/P2Rank/etc.) so only the progress bar updates; details still go to log files under the case / `output_dir/logs/`.
+During long batch runs, `rvsauto screen` and `rvsauto redock` show a **separate terminal progress bar for each pipeline stage** (0–100% within that stage: receptor prep, pockets, pocket configs, docking, etc.). Use `--no_progress` to turn it off. Use `--quiet` to hide console log lines **and** external-tool chatter (ADT/P2Rank/etc.) so only the progress bar updates; details still go to log files under the case / `output_dir/logs/`.
 
 By default, pockets with P2Rank calibrated `probability` below **0.05** are dropped (common screening default). Override with `--p2rank_min_probability` (e.g. `0.25` for stricter filtering); set `0` to keep all ranked pockets. Applied before `--max_pockets`.
 

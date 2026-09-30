@@ -655,7 +655,7 @@ def _collect_af2bind_pockets(pdb_dir, pdb_files, args, progress: PipelineProgres
                 )
             )
         if progress is not None:
-            progress.step(1, phase="AF2BIND pockets")
+            progress.step(1)
     if unmatched:
         logging.warning(
             "%d receptor(s) have no matching AF2BIND CSV: %s",
@@ -738,15 +738,6 @@ def main(argv=None) -> int:
         os.makedirs(d, exist_ok=True)
 
     pdb_paths = [os.path.join(pdb_dir, f) for f in pdb_files]
-    planned_units = 0
-    if not args.dry_run:
-        planned_units += len(pdb_paths)
-    if args.pocket_engine == "af2bind":
-        planned_units += len(pdb_files)
-    else:
-        planned_units += 1
-    if planned_units > 0:
-        progress.begin(planned_units)
 
     receptor_failures = []
     if not args.dry_run:
@@ -766,6 +757,7 @@ def main(argv=None) -> int:
                 "Failed receptors will retry after pLDDT filter (threshold %.1f).",
                 args.plddt_retry_threshold,
             )
+        progress.begin_phase("Receptor PDBQT", len(pdb_paths))
         with ThreadPoolExecutor(max_workers=max(1, args.total_cpu)) as pool:
             futures = {
                 pool.submit(
@@ -788,7 +780,7 @@ def main(argv=None) -> int:
                 except Exception as exc:
                     err = str(exc)
                 errors.append((pdb_path, err))
-                progress.step(1, phase="Receptor PDBQT")
+                progress.step(1)
         for pdb_path, err in errors:
             if err:
                 receptor_failures.append((file_stem(pdb_path), err))
@@ -807,7 +799,7 @@ def main(argv=None) -> int:
         logging.info("Dry run: skipping receptor PDBQT conversion.")
 
     if args.pocket_engine == "p2rank":
-        progress.step(0, phase="P2Rank")
+        progress.begin_phase("P2Rank", 1)
         p2rank_out = _run_p2rank(
             pdb_files,
             pdb_dir,
@@ -817,7 +809,7 @@ def main(argv=None) -> int:
             args.total_cpu,
             args.dock_env_path,
         )
-        progress.step(1, phase="P2Rank")
+        progress.step(1)
         pockets = _collect_p2rank_pockets(
             p2rank_out,
             [file_stem(f) for f in pdb_files],
@@ -827,15 +819,15 @@ def main(argv=None) -> int:
             ),
         )
     else:
+        progress.begin_phase("AF2BIND pockets", len(pdb_files))
         pockets = _collect_af2bind_pockets(
             pdb_dir, pdb_files, args, progress=progress
         )
 
     if not args.dry_run:
-        progress.add_tasks(1)
-        progress.step(0, phase="Filter pockets")
+        progress.begin_phase("Filter pockets", 1)
         pockets = _filter_pockets_with_pdbqt(pockets, pdbqt_dir)
-        progress.step(1, phase="Filter pockets")
+        progress.step(1)
 
     if not pockets:
         logging.error("No pockets were generated; aborting.")
@@ -854,8 +846,7 @@ def main(argv=None) -> int:
     if max_volume is not None:
         logging.info("Docking box volume cap: %.0f A^3", max_volume)
 
-    progress.add_tasks(len(pockets))
-    progress.step(0, phase="Pocket configs")
+    progress.begin_phase("Pocket configs", len(pockets))
     summary_rows = write_pocket_configs(
         pockets,
         pdb_dir,
@@ -893,8 +884,7 @@ def main(argv=None) -> int:
     all_affinities = {file_stem(lig): [] for lig in ligand_files}
     conf_files = sorted(f for f in os.listdir(pocket_dir) if f.endswith(".conf"))
     logging.info("Found %d configuration file(s).", len(conf_files))
-    progress.add_tasks(len(conf_files))
-    progress.step(0, phase="UniDock docking")
+    progress.begin_phase("UniDock docking", len(conf_files))
     missing_outputs = []
     gpu_cycle = 0
 
@@ -945,7 +935,7 @@ def main(argv=None) -> int:
             except Exception as exc:
                 logging.error("Task failed for %s: %s", future_to_conf[future], exc)
                 logging.error(traceback.format_exc())
-            progress.step(1, phase="UniDock docking")
+            progress.step(1)
 
     progress.close()
 

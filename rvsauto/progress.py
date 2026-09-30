@@ -43,14 +43,18 @@ def silence_console_logging() -> None:
 
 
 class PipelineProgress:
-    """Single global progress bar with percent complete and ETA (via tqdm)."""
+    """One progress bar per pipeline phase (each phase is 0–100% on its own)."""
 
     def __init__(self, enabled: bool = True) -> None:
         self.enabled = bool(enabled)
         self._total = 0
+        self._phase = "RVSAuto"
         self._bar = None
 
-    def begin(self, total: int) -> None:
+    def begin_phase(self, phase: str, total: int) -> None:
+        """Close the previous phase bar (if any) and start a new one."""
+        self.close()
+        self._phase = phase or "RVSAuto"
         self._total = max(0, int(total))
         if not self.enabled or self._total == 0:
             return
@@ -61,29 +65,38 @@ class PipelineProgress:
             unit="task",
             dynamic_ncols=True,
             file=sys.stderr,
-            desc="RVSAuto",
+            desc=f"RVSAuto | {self._phase}",
             bar_format=(
                 "{desc}: {percentage:3.0f}%|{bar}| "
                 "{n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]"
             ),
         )
 
+    def begin(self, total: int) -> None:
+        """Backward-compatible alias for a single unlabeled phase."""
+        self.begin_phase("RVSAuto", total)
+
     def add_tasks(self, extra: int) -> None:
-        """Increase total work units (e.g. when docking job count is known)."""
+        """Increase the *current* phase total (rarely needed with per-phase bars)."""
         if extra <= 0:
             return
         self._total += extra
         if self._bar is not None:
             self._bar.total = self._total
             self._bar.refresh()
+        elif self.enabled and self._total > 0:
+            self.begin_phase(self._phase, self._total)
 
     def step(self, n: int = 1, phase: Optional[str] = None) -> None:
         if not self.enabled:
             return
+        if phase and phase != self._phase:
+            # Description-only update if caller still passes a phase label.
+            self._phase = phase
+            if self._bar is not None:
+                self._bar.set_description(f"RVSAuto | {self._phase}")
         if self._bar is None:
             return
-        if phase:
-            self._bar.set_description(f"RVSAuto | {phase}")
         if n:
             self._bar.update(n)
 
