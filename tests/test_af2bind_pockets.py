@@ -268,6 +268,7 @@ class TestCliHelp(unittest.TestCase):
         help_text = parser.format_help()
         self.assertIn("--pocket_engine", help_text)
         self.assertIn("--af2bind_dir", help_text)
+        self.assertIn("--quiet", help_text)
 
     def test_redock_help(self):
         from rvsauto.cli_redock import build_parser
@@ -277,6 +278,7 @@ class TestCliHelp(unittest.TestCase):
         self.assertIn("--input_dir", help_text)
         self.assertIn("--unidock_path", help_text)
         self.assertIn("--no_progress", help_text)
+        self.assertIn("--quiet", help_text)
 
     def test_dry_run_af2bind_cli(self):
         from rvsauto.cli_unidock import main

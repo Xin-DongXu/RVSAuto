@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.2] - 2026-09-30
+
+### Added
+
+- **`--quiet`** for `rvsauto screen` and `rvsauto redock` — suppress console log lines so only the progress bar updates on screen; full logs still go to the log file. End-of-run summary is kept.
+
 ## [1.1.1] - 2026-09-30
 
 ### Added

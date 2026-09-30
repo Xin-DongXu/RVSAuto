@@ -31,6 +31,17 @@ def use_tqdm_safe_console_logging() -> None:
     root.addHandler(_TqdmStreamHandler())
 
 
+def silence_console_logging() -> None:
+    """Keep file logging; remove console handlers so only the progress bar shows."""
+    root = logging.getLogger()
+    for handler in list(root.handlers):
+        if isinstance(handler, logging.StreamHandler) and not isinstance(
+            handler, logging.FileHandler
+        ):
+            root.removeHandler(handler)
+            handler.close()
+
+
 class PipelineProgress:
     """Single global progress bar with percent complete and ETA (via tqdm)."""
 

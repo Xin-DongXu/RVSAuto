@@ -42,7 +42,11 @@ from .pockets import (
     write_pocket_configs,
     write_pocket_summary,
 )
-from .progress import PipelineProgress, use_tqdm_safe_console_logging
+from .progress import (
+    PipelineProgress,
+    silence_console_logging,
+    use_tqdm_safe_console_logging,
+)
 from .tables import parse_docking_label, write_docking_tables
 
 
@@ -283,6 +287,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--no_progress",
         action="store_true",
         help="Disable the terminal progress bar (logs only).",
+    )
+    g_misc.add_argument(
+        "--quiet",
+        action="store_true",
+        help=(
+            "Suppress console log lines so only the progress bar is shown; "
+            "detailed logs still go to the log file. End-of-run summary is kept."
+        ),
     )
     g_misc.add_argument(
         "--version", action="version", version=f"RVSAuto UniDock pipeline {__version__}"
@@ -661,7 +673,9 @@ def main(argv=None) -> int:
 
     log_file = setup_logging(output_dir, prefix="docking_run")
     progress = PipelineProgress(enabled=not args.no_progress)
-    if progress.enabled:
+    if args.quiet:
+        silence_console_logging()
+    elif progress.enabled:
         use_tqdm_safe_console_logging()
     logging.info("RVSAuto UniDock pipeline v%s", __version__)
     logging.info("Arguments: %s", vars(args))
@@ -1013,9 +1027,16 @@ def main(argv=None) -> int:
                     f"{protein_id}\t{pocket_info}\t{affinity}\t"
                     f"{full_filename}\t{complex_name}\n"
                 )
-        print(f"Completed ligand: {ligand_name}")
-        print(f"  All results : {docking_result_file}")
-        print(f"  Best results: {best_result_file}")
+        if not args.quiet:
+            print(f"Completed ligand: {ligand_name}")
+            print(f"  All results : {docking_result_file}")
+            print(f"  Best results: {best_result_file}")
+        logging.info(
+            "Completed ligand %s: all=%s best=%s",
+            ligand_name,
+            docking_result_file,
+            best_result_file,
+        )
 
     ligand_names = [file_stem(p) for p in ligand_files]
     table_paths = write_docking_tables(

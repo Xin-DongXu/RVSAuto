@@ -30,7 +30,11 @@ from .docking import (
 )
 from .pdbio import split_complex
 from .pockets import write_vina_config
-from .progress import PipelineProgress, use_tqdm_safe_console_logging
+from .progress import (
+    PipelineProgress,
+    silence_console_logging,
+    use_tqdm_safe_console_logging,
+)
 from .rmsd import heavy_atom_rmsd
 
 
@@ -209,6 +213,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--no_progress",
         action="store_true",
         help="Disable the terminal progress bar (logs only).",
+    )
+    g_misc.add_argument(
+        "--quiet",
+        action="store_true",
+        help=(
+            "Suppress console log lines so only the progress bar is shown; "
+            "detailed logs still go to the log file. End-of-run summary is kept."
+        ),
     )
     g_misc.add_argument(
         "--version", action="version", version=f"RVSAuto redock pipeline {__version__}"
@@ -441,7 +453,9 @@ def main(argv=None) -> int:
 
     log_file = setup_logging(output_dir, prefix="redock_run")
     progress = PipelineProgress(enabled=not args.no_progress)
-    if progress.enabled:
+    if args.quiet:
+        silence_console_logging()
+    elif progress.enabled:
         use_tqdm_safe_console_logging()
     logging.info("RVSAuto redock + RMSD pipeline v%s", __version__)
     logging.info("Arguments: %s", vars(args))
