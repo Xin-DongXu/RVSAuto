@@ -100,6 +100,11 @@ class PipelineProgress:
         if n:
             self._bar.update(n)
 
+    def set_postfix(self, text: str) -> None:
+        """Show short status text on the current bar (e.g. in-flight stems)."""
+        if self._bar is not None:
+            self._bar.set_postfix_str(text, refresh=True)
+
     def close(self) -> None:
         if self._bar is not None:
             self._bar.close()

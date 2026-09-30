@@ -1,6 +1,6 @@
 """RVSAuto: batch UniDock virtual screening and self-redocking utilities."""
 
-__version__ = "1.1.5"
+__version__ = "1.1.6"
 __all__ = ["__version__"]
 
 # Console entry points (after pip install):

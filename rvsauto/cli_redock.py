@@ -225,6 +225,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     g_misc.add_argument(
+        "--adt_timeout",
+        type=float,
+        default=600.0,
+        help="Seconds before killing a hung prepare_receptor4.py job "
+             "(default: 600). Set 0 to wait forever.",
+    )
+    g_misc.add_argument(
         "--version", action="version", version=f"RVSAuto redock pipeline {__version__}"
     )
     return p
@@ -290,12 +297,17 @@ def preprocess_one_complex(input_path, workdir, args):
         fixed_box_size=args.box_size,
     )
     try:
+        adt_timeout = (
+            None if args.adt_timeout is None or args.adt_timeout <= 0
+            else float(args.adt_timeout)
+        )
         receptor_pdb_to_pdbqt(
             apo_pdb,
             apo_pdbqt,
             adt_env_path=args.adt_env_path,
             clean=False,
             adt_log=os.path.join(case_dir, f"{stem}_prepare_receptor.log"),
+            timeout=adt_timeout,
         )
     except Exception as exc:
         logging.warning(
@@ -313,6 +325,7 @@ def preprocess_one_complex(input_path, workdir, args):
             clean=False,
             adt_repairs="bonds_hydrogens",
             adt_log=os.path.join(case_dir, f"{stem}_prepare_receptor_bonds.log"),
+            timeout=adt_timeout,
         )
     if args.ligand_pdbqt:
         install_ligand_pdbqt(args.ligand_pdbqt, lig_pdbqt, stem=stem)

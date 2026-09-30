@@ -15,7 +15,7 @@ from typing import Iterable, Optional, Tuple
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # When True, uncaptured subprocess stdout/stderr are discarded (for --quiet /
-# progress-bar runs). Failures with check=True still re-run with capture for diagnostics.
+# progress-bar runs).
 _QUIET_SUBPROCESSES = False
 
 
@@ -116,43 +116,87 @@ def run_command(
     env_path: Optional[str] = None,
     check: bool = True,
     capture: bool = False,
+    timeout: Optional[float] = None,
 ) -> subprocess.CompletedProcess:
-    """Run a shell command, optionally inside a conda environment."""
+    """Run a shell command, optionally inside a conda environment.
+
+    *timeout* is seconds; on expiry the process group is killed (Unix) so
+    nested tools such as ``prepare_receptor4.py`` do not linger forever.
+    Failed commands are **not** re-executed for diagnostics (that used to
+    double runtime and could hang twice on a stuck ADT job).
+    """
     full = wrap_env_command(command, env_path)
     bash = bash_executable()
-    kwargs = dict(shell=True, check=False)
+    kwargs: dict = dict(shell=True)
     if bash and os.name != "nt":
         kwargs["executable"] = bash
     if capture:
-        kwargs.update(capture_output=True, text=True)
+        kwargs.update(stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     elif _QUIET_SUBPROCESSES:
         kwargs.update(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # New session so timeout can kill the whole tree (conda + prepare_receptor4).
+    if os.name != "nt":
+        kwargs["start_new_session"] = True
+
     logging.debug("Running: %s", full)
     try:
-        proc = subprocess.run(full, **kwargs)
+        proc = subprocess.Popen(full, **kwargs)
     except FileNotFoundError as exc:
         logging.error("Failed to start command: %s (%s)", full, exc)
         raise
-    if proc.returncode != 0:
-        logging.error("Command failed (rc=%s): %s", proc.returncode, full)
-        if check and not capture:
-            try:
-                diag = subprocess.run(
-                    full,
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    executable=bash if bash and os.name != "nt" else None,
-                )
-                if diag.stdout and diag.stdout.strip():
-                    logging.error("Command stdout:\n%s", diag.stdout.strip()[-4000:])
-                if diag.stderr and diag.stderr.strip():
-                    logging.error("Command stderr:\n%s", diag.stderr.strip()[-4000:])
-            except Exception as exc:
-                logging.debug("Could not capture failed command output: %s", exc)
+
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        logging.error(
+            "Command timed out after %s s; killing process group: %s",
+            timeout,
+            full,
+        )
+        _kill_process_tree(proc)
+        try:
+            proc.communicate(timeout=5)
+        except Exception:
+            pass
+        raise TimeoutError(
+            f"command timed out after {timeout}s: {full}"
+        ) from None
+
+    result = subprocess.CompletedProcess(
+        args=full,
+        returncode=proc.returncode,
+        stdout=stdout if capture else None,
+        stderr=stderr if capture else None,
+    )
+    if result.returncode != 0:
+        logging.error("Command failed (rc=%s): %s", result.returncode, full)
+        if capture:
+            if result.stdout and str(result.stdout).strip():
+                logging.error("Command stdout:\n%s", str(result.stdout).strip()[-4000:])
+            if result.stderr and str(result.stderr).strip():
+                logging.error("Command stderr:\n%s", str(result.stderr).strip()[-4000:])
         if check:
-            raise subprocess.CalledProcessError(proc.returncode, full)
-    return proc
+            raise subprocess.CalledProcessError(result.returncode, full)
+    return result
+
+
+def _kill_process_tree(proc: subprocess.Popen) -> None:
+    """Best-effort kill of *proc* and its children."""
+    if proc.poll() is not None:
+        return
+    try:
+        if os.name != "nt":
+            import signal
+
+            os.killpg(proc.pid, signal.SIGKILL)
+        else:
+            proc.kill()
+    except (ProcessLookupError, PermissionError, OSError):
+        try:
+            proc.kill()
+        except OSError:
+            pass
 
 
 def resolve_gpu_list(gpu_ids_arg: Optional[str]) -> Tuple[list, int]:

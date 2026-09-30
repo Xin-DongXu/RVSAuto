@@ -45,11 +45,14 @@ def receptor_pdb_to_pdbqt(
     keep_clean_pdb: Optional[str] = None,
     adt_log: Optional[str] = None,
     adt_repairs: str = "hydrogens",
+    timeout: Optional[float] = None,
 ) -> None:
     """Convert a receptor PDB to PDBQT via prepare_receptor4.py.
 
     When *keep_clean_pdb* is set, the protein-only PDB used for docking is
     saved there (needed later to build apo + docked-ligand complexes).
+    *timeout* (seconds) is passed to the ADT subprocess; ``None`` means wait
+    forever (not recommended for large batch runs).
     """
     if os.path.exists(pdbqt_out) and os.path.getsize(pdbqt_out) > 0:
         logging.info("PDBQT already exists: %s", os.path.basename(pdbqt_out))
@@ -90,7 +93,7 @@ def receptor_pdb_to_pdbqt(
         else:
             null = "NUL" if os.name == "nt" else "/dev/null"
             cmd = f'{cmd} > "{null}" 2>&1'
-        run_command(cmd, env_path=adt_env_path)
+        run_command(cmd, env_path=adt_env_path, timeout=timeout)
         if not os.path.exists(pdbqt_out):
             raise RuntimeError(
                 f"prepare_receptor4.py produced no output for {pdb_file}"

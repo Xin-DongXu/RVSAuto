@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.6] - 2026-09-30
+
+### Fixed
+
+- **Hung `prepare_receptor4.py` no longer blocks the whole PDBQT stage** — subprocesses now have a default **600 s** timeout (`--adt_timeout`); the process group is killed on expiry so batch jobs can continue.
+- Failed shell commands are **no longer re-executed** just for diagnostics (that doubled ADT work and could hang twice).
+- Receptor PDBQT progress shows **in-flight protein IDs** (`active=…`) so the last stuck structure is visible under `--quiet`.
+
 ## [1.1.5] - 2026-09-30
 
 ### Changed

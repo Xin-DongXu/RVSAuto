@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import threading
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -227,6 +228,13 @@ def build_parser() -> argparse.ArgumentParser:
              "(B-factor) below this value and retry ADT. Set 0 to disable "
              "(default: 70).",
     )
+    g_receptor.add_argument(
+        "--adt_timeout",
+        type=float,
+        default=600.0,
+        help="Seconds before killing a hung prepare_receptor4.py job "
+             "(default: 600). Set 0 to wait forever (not recommended).",
+    )
 
     g_dock = p.add_argument_group("Docking parameters")
     g_dock.add_argument(
@@ -325,12 +333,14 @@ def _convert_one(
     pdbfixer_env_path=None,
     pdbfixer_ph: float = 7.0,
     plddt_retry_threshold: float = 70.0,
+    adt_timeout: Optional[float] = 600.0,
 ) -> Optional[str]:
     """Convert one receptor; return an error message or None on success."""
     stem = file_stem(pdb_file)
     out = os.path.join(pdbqt_dir, f"{stem}.pdbqt")
     keep = os.path.join(clean_dir, f"{stem}.pdb")
     fixed = os.path.join(clean_dir, f"{stem}_pdbfixer.pdb")
+    timeout = None if adt_timeout is None or adt_timeout <= 0 else float(adt_timeout)
 
     def run_prepare(
         src: str,
@@ -353,6 +363,7 @@ def _convert_one(
             keep_clean_pdb=keep_path,
             adt_log=adt_log,
             adt_repairs=adt_repairs,
+            timeout=timeout,
         )
         if not os.path.exists(out) or os.path.getsize(out) == 0:
             adt_log = os.path.join(pdbqt_dir, f"{stem}_prepare_receptor{log_suffix}.log")
@@ -757,20 +768,48 @@ def main(argv=None) -> int:
                 "Failed receptors will retry after pLDDT filter (threshold %.1f).",
                 args.plddt_retry_threshold,
             )
+        if args.adt_timeout and args.adt_timeout > 0:
+            logging.info(
+                "ADT prepare_receptor4 timeout: %.0f s per attempt.",
+                args.adt_timeout,
+            )
         progress.begin_phase("Receptor PDBQT", len(pdb_paths))
-        with ThreadPoolExecutor(max_workers=max(1, args.total_cpu)) as pool:
-            futures = {
-                pool.submit(
-                    _convert_one,
-                    p,
+        in_flight: dict[str, None] = {}
+        in_flight_lock = threading.Lock()
+
+        def _convert_tracked(pdb_path: str) -> Optional[str]:
+            stem = file_stem(pdb_path)
+            with in_flight_lock:
+                in_flight[stem] = None
+                sample = ", ".join(list(in_flight)[:3])
+                if len(in_flight) > 3:
+                    sample += f" +{len(in_flight) - 3}"
+                progress.set_postfix(f"active={len(in_flight)} [{sample}]")
+            try:
+                return _convert_one(
+                    pdb_path,
                     pdbqt_dir,
                     clean_dir,
                     args.adt_env_path,
                     args.pdbfixer_env_path,
                     args.pdbfixer_ph,
                     args.plddt_retry_threshold,
-                ): p
-                for p in pdb_paths
+                    args.adt_timeout,
+                )
+            finally:
+                with in_flight_lock:
+                    in_flight.pop(stem, None)
+                    if in_flight:
+                        sample = ", ".join(list(in_flight)[:3])
+                        if len(in_flight) > 3:
+                            sample += f" +{len(in_flight) - 3}"
+                        progress.set_postfix(f"active={len(in_flight)} [{sample}]")
+                    else:
+                        progress.set_postfix("")
+
+        with ThreadPoolExecutor(max_workers=max(1, args.total_cpu)) as pool:
+            futures = {
+                pool.submit(_convert_tracked, p): p for p in pdb_paths
             }
             errors = []
             for fut in as_completed(futures):
