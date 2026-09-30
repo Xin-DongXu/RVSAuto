@@ -18,6 +18,7 @@ from .common import (
     find_unidock,
     resolve_gpu_list,
     run_command,
+    set_quiet_subprocesses,
     setup_logging,
 )
 from .docking import (
@@ -292,8 +293,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--quiet",
         action="store_true",
         help=(
-            "Suppress console log lines so only the progress bar is shown; "
-            "detailed logs still go to the log file. End-of-run summary is kept."
+            "Suppress console logs and external-tool stdout/stderr so only the "
+            "progress bar is shown; details still go to log files. "
+            "End-of-run summary is kept."
         ),
     )
     g_misc.add_argument(
@@ -675,8 +677,10 @@ def main(argv=None) -> int:
     progress = PipelineProgress(enabled=not args.no_progress)
     if args.quiet:
         silence_console_logging()
+        set_quiet_subprocesses(True)
     elif progress.enabled:
         use_tqdm_safe_console_logging()
+        set_quiet_subprocesses(True)
     logging.info("RVSAuto UniDock pipeline v%s", __version__)
     logging.info("Arguments: %s", vars(args))
     logging.info("Repository root: %s", REPO_ROOT)

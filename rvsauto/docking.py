@@ -82,11 +82,14 @@ def receptor_pdb_to_pdbqt(
             f'prepare_receptor4.py -r "{src}" -o "{pdbqt_out}" '
             f'-A {adt_repairs} -U deleteAltB'
         )
+        # Never use MGLTools -v on a shared terminal: it floods progress bars
+        # under parallel preprocess. Prefer a log file; otherwise discard.
         if adt_log:
             os.makedirs(os.path.dirname(os.path.abspath(adt_log)), exist_ok=True)
             cmd = f'{cmd} > "{adt_log}" 2>&1'
         else:
-            cmd = f"{cmd} -v"
+            null = "NUL" if os.name == "nt" else "/dev/null"
+            cmd = f'{cmd} > "{null}" 2>&1'
         run_command(cmd, env_path=adt_env_path)
         if not os.path.exists(pdbqt_out):
             raise RuntimeError(

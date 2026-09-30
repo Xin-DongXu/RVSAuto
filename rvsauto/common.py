@@ -14,6 +14,20 @@ from typing import Iterable, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# When True, uncaptured subprocess stdout/stderr are discarded (for --quiet /
+# progress-bar runs). Failures with check=True still re-run with capture for diagnostics.
+_QUIET_SUBPROCESSES = False
+
+
+def set_quiet_subprocesses(enabled: bool = True) -> None:
+    """Discard stdout/stderr of shell tools unless capture=True."""
+    global _QUIET_SUBPROCESSES
+    _QUIET_SUBPROCESSES = bool(enabled)
+
+
+def quiet_subprocesses_enabled() -> bool:
+    return _QUIET_SUBPROCESSES
+
 
 def setup_logging(output_dir: str, prefix: str = "run") -> str:
     """Log to both a timestamped file under output_dir/logs and stderr."""
@@ -111,6 +125,8 @@ def run_command(
         kwargs["executable"] = bash
     if capture:
         kwargs.update(capture_output=True, text=True)
+    elif _QUIET_SUBPROCESSES:
+        kwargs.update(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logging.debug("Running: %s", full)
     try:
         proc = subprocess.run(full, **kwargs)

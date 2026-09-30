@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.3] - 2026-09-30
+
+### Fixed
+
+- **`--quiet` / progress bar** — ADT `prepare_receptor4.py` no longer dumps verbose `-v` output to the terminal (that spam was breaking the bar even with `--quiet`). Output goes to per-case log files or `/dev/null`.
+- External tool stdout/stderr is discarded when `--quiet` is set **or** the progress bar is enabled.
+
 ## [1.1.2] - 2026-09-30
 
 ### Added

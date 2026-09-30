@@ -2,6 +2,7 @@
 
 import logging
 
+from rvsauto.common import quiet_subprocesses_enabled, set_quiet_subprocesses
 from rvsauto.progress import PipelineProgress, silence_console_logging
 
 
@@ -35,3 +36,14 @@ def test_silence_console_logging_keeps_file_handler(tmp_path):
         root.removeHandler(handler)
         handler.close()
     assert "file-only" in log_file.read_text(encoding="utf-8")
+
+
+def test_set_quiet_subprocesses_toggle():
+    prev = quiet_subprocesses_enabled()
+    try:
+        set_quiet_subprocesses(True)
+        assert quiet_subprocesses_enabled() is True
+        set_quiet_subprocesses(False)
+        assert quiet_subprocesses_enabled() is False
+    finally:
+        set_quiet_subprocesses(prev)
