@@ -141,7 +141,7 @@ rvsauto screen \
 
 `--use_alphafold` passes P2Rank `-c alphafold`, recommended for AlphaFold models.
 
-During long proteome-scale runs, `rvsauto screen` shows a **terminal progress bar** (overall % complete, elapsed time, and ETA). Use `--no_progress` to turn it off.
+During long batch runs, `rvsauto screen` and `rvsauto redock` show a **terminal progress bar** (overall % complete, elapsed time, and ETA). Use `--no_progress` to turn it off.
 
 By default, pockets with P2Rank calibrated `probability` below **0.05** are dropped (common screening default). Override with `--p2rank_min_probability` (e.g. `0.25` for stricter filtering); set `0` to keep all ranked pockets. Applied before `--max_pockets`.
 
@@ -239,7 +239,7 @@ rvsauto redock \
   --gpu_ids 0
 ```
 
-Accepts `.pdb`, `.cif`, and gzipped variants. Summary: `results/redock_summary.tsv` (affinity + heavy-atom RMSD, plus percent of poses <= 2 A).
+Accepts `.pdb`, `.cif`, and gzipped variants. Summary: `results/redock_summary.tsv` (affinity + heavy-atom RMSD, plus percent of poses <= 2 A). Long runs show a terminal progress bar (disable with `--no_progress`).
 
 ---
 

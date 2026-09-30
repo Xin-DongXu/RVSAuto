@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [1.1.1] - 2026-09-30
+
+### Added
+
+- **`rvsauto redock` progress bar** — overall completion (%), elapsed time, and ETA across preprocessing (split + PDBQT + conf) and UniDock redock/score jobs. Disable with `--no_progress`.
+
 ## [1.1.0] - 2026-09-29
 
 ### Added

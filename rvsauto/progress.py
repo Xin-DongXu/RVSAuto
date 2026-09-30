@@ -1,4 +1,4 @@
-"""Terminal progress bar for long batch screening runs."""
+"""Terminal progress bar for long batch screen / redock runs."""
 
 from __future__ import annotations
 

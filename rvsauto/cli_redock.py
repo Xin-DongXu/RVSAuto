@@ -30,6 +30,7 @@ from .docking import (
 )
 from .pdbio import split_complex
 from .pockets import write_vina_config
+from .progress import PipelineProgress, use_tqdm_safe_console_logging
 from .rmsd import heavy_atom_rmsd
 
 
@@ -203,6 +204,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--skip_existing",
         action="store_true",
         help="Reuse cases whose redocked pose already exists; still score them.",
+    )
+    g_misc.add_argument(
+        "--no_progress",
+        action="store_true",
+        help="Disable the terminal progress bar (logs only).",
     )
     g_misc.add_argument(
         "--version", action="version", version=f"RVSAuto redock pipeline {__version__}"
@@ -434,6 +440,9 @@ def main(argv=None) -> int:
     os.makedirs(output_dir, exist_ok=True)
 
     log_file = setup_logging(output_dir, prefix="redock_run")
+    progress = PipelineProgress(enabled=not args.no_progress)
+    if progress.enabled:
+        use_tqdm_safe_console_logging()
     logging.info("RVSAuto redock + RMSD pipeline v%s", __version__)
     logging.info("Arguments: %s", vars(args))
     logging.info("Repository root: %s", REPO_ROOT)
@@ -471,6 +480,7 @@ def main(argv=None) -> int:
     )
     logging.info("UniDock binary: %s", unidock_bin)
 
+    progress.begin(len(inputs))
     logging.info("Phase 1: preprocessing complexes (split + PDBQT + conf)")
     prepared = []
     failed_rows = []
@@ -497,6 +507,7 @@ def main(argv=None) -> int:
                         rmsd_heavy=float("nan"),
                     )
                 )
+            progress.step(1, phase="Preprocess")
             if i % 50 == 0 or i == len(inputs):
                 logging.info("  preprocessed %d/%d", i, len(inputs))
 
@@ -522,6 +533,8 @@ def main(argv=None) -> int:
     logging.info("Phase 2: redocking with UniDock")
     rows = list(failed_rows)
     gpu_cycle = 0
+    progress.add_tasks(len(already_done) + len(to_dock))
+    progress.step(0, phase="UniDock redock")
 
     def _submit(pool, task, gpu_id):
         return pool.submit(
@@ -558,10 +571,12 @@ def main(argv=None) -> int:
                         status=f"failed (dock): {exc}",
                     )
                 )
+            progress.step(1, phase="UniDock redock")
             if total and (i % 25 == 0 or i == total):
                 logging.info("  scored %d/%d", i, total)
                 write_summary(rows, summary_tsv)
 
+    progress.close()
     write_summary(rows, summary_tsv)
 
     if args.purge_intermediates:

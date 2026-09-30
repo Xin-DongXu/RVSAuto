@@ -276,6 +276,7 @@ class TestCliHelp(unittest.TestCase):
         help_text = parser.format_help()
         self.assertIn("--input_dir", help_text)
         self.assertIn("--unidock_path", help_text)
+        self.assertIn("--no_progress", help_text)
 
     def test_dry_run_af2bind_cli(self):
         from rvsauto.cli_unidock import main
